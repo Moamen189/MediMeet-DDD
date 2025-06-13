@@ -1,23 +1,80 @@
-﻿namespace AppointmentBooking.Domain.DomainModels;
+﻿using Shared.RootEntity;
 
-public class Patient
+namespace AppointmentBooking.Domain.DomainModels;
+
+public class Patient : AggregateRoot
 {
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public string Email { get; set; }
-    public string PhoneNumber { get; set; }
-    
-    
-    //factory method is better than constructor as it show intention
-    public static Patient CreatePatient(int id,string patientName, string email, string phoneNumber)
+    private Patient() { } // For EF Core
+
+    private Patient(
+        PatientId id,
+        PatientName name,
+        EmailAddress email,
+        PhoneNumber phoneNumber)
     {
-        var patient = new Patient
-        {
-            Id = id,
-            Name = patientName,
-            Email = email,
-            PhoneNumber = phoneNumber
-        };
-        return patient;
+        Id = id;
+        Name = name;
+        Email = email;
+        PhoneNumber = phoneNumber;
     }
+
+    public PatientId Id { get; private set; }
+    public PatientName Name { get; private set; }
+    public EmailAddress Email { get; private set; }
+    public PhoneNumber PhoneNumber { get; private set; }
+
+    public static Patient Create(
+        int id,
+        string name,
+        string email,
+        string phoneNumber)
+    {
+        return new Patient(
+            PatientId.From(id),
+            PatientName.From(name),
+            EmailAddress.From(email),
+            PhoneNumber.From(phoneNumber)
+        );
+    }
+
+    public void UpdateContactInfo(EmailAddress newEmail, PhoneNumber newPhone)
+    {
+        Email = newEmail;
+        PhoneNumber = newPhone;
+        AddDomainEvent(new PatientContactInfoUpdatedDomainEvent(Id, Email, PhoneNumber));
+    }
+}
+
+public record EmailAddress
+{
+    public string Value { get; }
+
+    private EmailAddress(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            throw new DomainException("Email address cannot be empty");
+        
+        if (!value.Contains("@"))
+            throw new DomainException("Invalid email address format");
+        
+        Value = value;
+    }
+
+    public static EmailAddress From(string email) => new(email);
+}
+
+public record PhoneNumber
+{
+    public string Value { get; }
+
+    private PhoneNumber(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            throw new DomainException("Phone number cannot be empty");
+        
+        // Add more validation as needed
+        Value = value;
+    }
+
+    public static PhoneNumber From(string phoneNumber) => new(phoneNumber);
 }

@@ -50,21 +50,73 @@ public class AppointmentRepository : IAppointmentRepository
 		return Task.FromResult(entity.ToDomainModel());
 	}
 
-	public Task<bool> UpdateAsync(Appointment appointment)
+	public async Task<bool> UpdateAsync(Appointment appointment)
 	{
 		var entity = InMemoryDb.Appointments.FirstOrDefault(x => x.Id == appointment.Id.Value);
 		if (entity == null)
 		{
-			return Task.FromResult(false);
+			return false;
 		}
 
-		entity.Status = appointment.Status;
+		// Update all properties
+		var updatedEntity = appointment.ToEntity();
+		entity.Status = updatedEntity.Status;
+		entity.ReservedAt = updatedEntity.ReservedAt;
 		
 		foreach (var domainEvent in appointment.DomainEvents)
 		{
-			_mediator.Publish(domainEvent);
+			await _mediator.Publish(domainEvent);
 		}
 		
-		return Task.FromResult(true);
+		return true;
+	}
+
+	public Task<List<Appointment>> GetPatientAppointmentsAsync(PatientId patientId)
+	{
+		var appointments = InMemoryDb.Appointments
+			.Where(x => x.PatientId == patientId.Value)
+			.Select(x => x.ToDomainModel())
+			.ToList();
+			
+		return Task.FromResult(appointments);
+	}
+
+	public Task<bool> ExistsOverlappingAppointmentAsync(PatientId patientId, AppointmentDateTime dateTime)
+	{
+		// Check for any appointments within 1 hour before or after the given time
+		var oneHourBefore = dateTime.Value.AddHours(-1);
+		var oneHourAfter = dateTime.Value.AddHours(1);
+		
+		var exists = InMemoryDb.Appointments.Any(x => 
+			x.PatientId == patientId.Value &&
+			x.Status != Domain.Enums.AppointmentStatus.Cancelled &&
+			x.ReservedAt >= oneHourBefore &&
+			x.ReservedAt <= oneHourAfter);
+			
+		return Task.FromResult(exists);
+	}
+
+	public Task<int> GetPatientAppointmentCountInPeriodAsync(PatientId patientId, DateTime startDate, DateTime endDate)
+	{
+		var count = InMemoryDb.Appointments.Count(x =>
+			x.PatientId == patientId.Value &&
+			x.Status != Domain.Enums.AppointmentStatus.Cancelled &&
+			x.ReservedAt >= startDate &&
+			x.ReservedAt <= endDate);
+			
+		return Task.FromResult(count);
+	}
+
+	public Task<List<Appointment>> GetAppointmentsForDoctorAsync(DoctorName doctorName, DateTime date)
+	{
+		var appointments = InMemoryDb.Appointments
+			.Where(x => 
+				x.DoctorName == doctorName.Value &&
+				x.ReservedAt.Date == date.Date &&
+				x.Status != Domain.Enums.AppointmentStatus.Cancelled)
+			.Select(x => x.ToDomainModel())
+			.ToList();
+			
+		return Task.FromResult(appointments);
 	}
 }

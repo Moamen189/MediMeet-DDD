@@ -1,3 +1,134 @@
+# MediMeet - Domain-Driven Design Implementation
+
+## Architecture Overview
+
+This project follows Domain-Driven Design (DDD) principles to create a robust and maintainable medical appointment scheduling system. The system is divided into several bounded contexts, each handling a specific domain of the business.
+
+### Bounded Contexts
+
+1. **Appointment Booking Module**
+   - Core domain for patient appointment scheduling
+   - Handles appointment creation, confirmation, and cancellation
+   - Manages patient information
+
+2. **Doctor Availability Module**
+   - Manages doctor schedules and availability
+   - Handles time slot management
+   - Coordinates with appointment booking
+
+3. **Doctor Appointment Management Module**
+   - Doctor-focused appointment management
+   - Schedule viewing and management
+   - Patient history and appointment details
+
+4. **Appointment Confirmation Module**
+   - Handles appointment confirmation workflow
+   - Manages notifications and reminders
+   - Tracks appointment status changes
+
+### DDD Implementation Guidelines
+
+#### 1. Domain Layer
+- Contains business logic and rules
+- Implements aggregates, entities, and value objects
+- Defines domain events
+- No dependencies on external layers
+
+#### 2. Application Layer
+- Orchestrates use cases
+- Implements application services
+- Handles domain events
+- Manages transactions
+
+#### 3. Infrastructure Layer
+- Implements repositories
+- Handles persistence
+- Manages external services
+- Provides technical capabilities
+
+#### 4. API Layer
+- Exposes REST endpoints
+- Handles HTTP requests/responses
+- Maps DTOs to domain models
+
+### Best Practices
+
+1. **Aggregate Design**
+   - Keep aggregates small and focused
+   - Ensure consistency boundaries
+   - Use domain events for cross-aggregate communication
+
+2. **Value Objects**
+   - Make them immutable
+   - Validate in constructors
+   - Use factory methods for creation
+
+3. **Domain Events**
+   - Use for cross-boundary communication
+   - Keep them immutable
+   - Include only necessary information
+
+4. **Repository Pattern**
+   - One repository per aggregate root
+   - Return fully-constructed aggregates
+   - Handle persistence details
+
+### Project Structure
+
+```
+src/
+├── Modules/                          # Bounded Contexts
+│   ├── AppointmentBookingModule/     # Appointment Booking Context
+│   │   ├── Domain/                   # Domain Layer
+│   │   ├── Application/              # Application Layer
+│   │   ├── Infrastructure/           # Infrastructure Layer
+│   │   └── Api/                      # API Layer
+│   ├── DoctorAvailabilityModule/     # Doctor Availability Context
+│   └── [Other Modules]/              # Other Bounded Contexts
+└── Shared/                           # Shared Kernel
+    └── Common infrastructure and contracts
+```
+
+### Development Guidelines
+
+1. **Domain Model**
+   - Use ubiquitous language
+   - Implement business rules in domain objects
+   - Keep domain logic pure
+
+2. **Bounded Contexts**
+   - Clear boundaries between modules
+   - Explicit context mapping
+   - Independent deployability
+
+3. **Testing**
+   - Unit tests for domain logic
+   - Integration tests for use cases
+   - End-to-end tests for critical paths
+
+4. **Event-Driven**
+   - Use domain events for loose coupling
+   - Implement event sourcing where appropriate
+   - Maintain event consistency
+
+### Getting Started
+
+1. Clone the repository
+2. Install dependencies
+3. Set up the database
+4. Run the application
+
+### Contributing
+
+1. Follow DDD principles
+2. Use ubiquitous language
+3. Document domain decisions
+4. Write tests
+
+## License
+
+[License details]
+
 # MediMeet App (Modular Monolith)
 
 This project is a backend system for a doctor appointment booking application. It is designed to handle the logic behind managing and booking appointments for a single doctor. The system is built using a **Modular Monolith** architecture, with each module adhering to a specific architectural style.
