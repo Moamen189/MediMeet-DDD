@@ -1,3 +1,146 @@
+# MediMeet - DDD Medical Appointment System
+
+MediMeet is a medical appointment scheduling system built using Domain-Driven Design (DDD) principles. The system is divided into several bounded contexts, each handling specific business capabilities.
+
+## Architecture Overview
+
+The system follows a clean DDD architecture with the following layers:
+
+- **Domain Layer**: Contains the business logic, domain models, and business rules
+- **Application Layer**: Orchestrates use cases and coordinates domain objects
+- **Infrastructure Layer**: Handles technical concerns like persistence and external services
+- **API Layer**: Exposes the functionality through RESTful endpoints
+
+## Bounded Contexts
+
+### 1. Appointment Booking Module
+Handles the core appointment booking process.
+
+- **Domain Models**:
+  - Patient (Aggregate Root)
+  - Appointment (Aggregate Root)
+  - Value Objects: EmailAddress, PhoneNumber, AppointmentTime
+
+- **Key Features**:
+  - Book appointments
+  - Manage patient information
+  - Handle scheduling constraints
+
+### 2. Doctor Availability Module
+Manages doctor schedules and availability.
+
+- **Domain Models**:
+  - Doctor (Aggregate Root)
+  - TimeSlot (Entity)
+  - Value Objects: DoctorId, DoctorName, Specialty, TimeRange
+
+- **Key Features**:
+  - Manage doctor schedules
+  - Define available time slots
+  - Handle scheduling conflicts
+
+### 3. Doctor Appointment Management Module
+Handles appointment confirmations and management.
+
+- **Domain Models**:
+  - AppointmentConfirmation (Aggregate Root)
+  - Value Objects: 
+    - AppointmentConfirmationId
+    - AppointmentId
+    - SlotId
+    - PatientInfo
+    - AppointmentDateTime
+
+- **Key Features**:
+  - Confirm appointments
+  - Cancel appointments
+  - Track appointment status
+  - Manage upcoming appointments
+
+### 4. Appointment Confirmation Module
+Handles notifications and confirmations.
+
+- **Domain Models**:
+  - Notification (Aggregate Root)
+  - Value Objects:
+    - NotificationId
+    - NotificationContent
+    - NotificationRecipient
+    - NotificationType
+    - NotificationStatus
+
+- **Key Features**:
+  - Send appointment confirmations
+  - Send appointment reminders
+  - Handle cancellation notifications
+  - Track notification status
+
+## Domain Events
+
+The system uses domain events for cross-boundary communication:
+
+- AppointmentCreatedEvent
+- AppointmentConfirmedEvent
+- AppointmentCanceledEvent
+- NotificationCreatedEvent
+- NotificationSentEvent
+- NotificationFailedEvent
+
+## Value Objects
+
+Value objects are used to encapsulate domain concepts:
+
+- IDs (AppointmentId, DoctorId, NotificationId, etc.)
+- DateTime handling (AppointmentDateTime, TimeRange)
+- Contact information (EmailAddress, PhoneNumber)
+- Domain-specific types (NotificationContent, PatientInfo)
+
+## Repository Pattern
+
+Each aggregate root has its own repository with domain-focused methods:
+
+- IAppointmentRepository
+- IDoctorRepository
+- IAppointmentConfirmationRepository
+- INotificationRepository
+
+## Getting Started
+
+1. Clone the repository
+2. Restore NuGet packages
+3. Run the application
+
+## API Endpoints
+
+### Appointment Confirmation
+- POST /api/notification/appointment/confirmation
+- POST /api/notification/appointment/cancellation
+- POST /api/notification/appointment/reminder
+- POST /api/notification/resend-failed
+
+### Doctor Appointment Management
+- POST /api/appointmentconfirmation
+- POST /api/appointmentconfirmation/{appointmentId}/confirm
+- POST /api/appointmentconfirmation/{appointmentId}/cancel
+- GET /api/appointmentconfirmation/upcoming
+- GET /api/appointmentconfirmation/patient/{patientId}
+
+## Best Practices
+
+- Rich domain models with proper encapsulation
+- Value objects for immutable concepts
+- Domain events for cross-boundary communication
+- Clear separation of concerns
+- Business rules enforced in the domain layer
+- Proper error handling and validation
+
+## Technologies
+
+- .NET 8.0
+- MediatR for domain events
+- In-memory storage (for demonstration)
+- RESTful APIs
+
 # MediMeet - Domain-Driven Design Implementation
 
 ## Architecture Overview
