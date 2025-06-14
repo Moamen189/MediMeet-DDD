@@ -1,44 +1,42 @@
-using Shared.RootEntity;
-
 namespace AppointmentConfirmation.Api.Domain.Models;
 
 public record NotificationId
 {
-    public Guid Value { get; }
+	public Guid Value { get; }
 
-    private NotificationId(Guid value)
-    {
-        Value = value;
-    }
+	private NotificationId(Guid value)
+	{
+		Value = value;
+	}
 
-    public static NotificationId Create() => new(Guid.NewGuid());
-    public static NotificationId From(Guid id) => new(id);
+	public static NotificationId Create() => new(Guid.NewGuid());
+	public static NotificationId From(Guid id) => new(id);
 }
 
 public record NotificationContent
 {
-    public string Subject { get; }
-    public string Body { get; }
+	public string Subject { get; }
+	public string Body { get; }
 
-    private NotificationContent(string subject, string body)
-    {
-        if (string.IsNullOrWhiteSpace(subject))
-            throw new DomainException("Notification subject cannot be empty");
-        
-        if (string.IsNullOrWhiteSpace(body))
-            throw new DomainException("Notification body cannot be empty");
+	private NotificationContent(string subject, string body)
+	{
+		if (string.IsNullOrWhiteSpace(subject))
+			throw new CannotUnloadAppDomainException("Notification subject cannot be empty");
 
-        Subject = subject;
-        Body = body;
-    }
+		if (string.IsNullOrWhiteSpace(body))
+			throw new CannotUnloadAppDomainException("Notification body cannot be empty");
 
-    public static NotificationContent CreateAppointmentConfirmation(
-        string patientName,
-        DateTime appointmentDateTime,
-        string doctorName)
-    {
-        var subject = "Appointment Confirmation";
-        var body = $"""
+		Subject = subject;
+		Body = body;
+	}
+
+	public static NotificationContent CreateAppointmentConfirmation(
+		string patientName,
+		DateTime appointmentDateTime,
+		string doctorName)
+	{
+		var subject = "Appointment Confirmation";
+		var body = $"""
             Dear {patientName},
 
             Your appointment with {doctorName} has been confirmed for {appointmentDateTime:f}.
@@ -49,17 +47,17 @@ public record NotificationContent
             MediMeet Team
             """;
 
-        return new NotificationContent(subject, body);
-    }
+		return new NotificationContent(subject, body);
+	}
 
-    public static NotificationContent CreateAppointmentCancellation(
-        string patientName,
-        DateTime appointmentDateTime,
-        string doctorName,
-        string reason)
-    {
-        var subject = "Appointment Cancellation";
-        var body = $"""
+	public static NotificationContent CreateAppointmentCancellation(
+		string patientName,
+		DateTime appointmentDateTime,
+		string doctorName,
+		string reason)
+	{
+		var subject = "Appointment Cancellation";
+		var body = $"""
             Dear {patientName},
 
             Your appointment with {doctorName} scheduled for {appointmentDateTime:f} has been cancelled.
@@ -72,16 +70,16 @@ public record NotificationContent
             MediMeet Team
             """;
 
-        return new NotificationContent(subject, body);
-    }
+		return new NotificationContent(subject, body);
+	}
 
-    public static NotificationContent CreateAppointmentReminder(
-        string patientName,
-        DateTime appointmentDateTime,
-        string doctorName)
-    {
-        var subject = "Appointment Reminder";
-        var body = $"""
+	public static NotificationContent CreateAppointmentReminder(
+		string patientName,
+		DateTime appointmentDateTime,
+		string doctorName)
+	{
+		var subject = "Appointment Reminder";
+		var body = $"""
             Dear {patientName},
 
             This is a reminder for your upcoming appointment with {doctorName} scheduled for {appointmentDateTime:f}.
@@ -92,43 +90,43 @@ public record NotificationContent
             MediMeet Team
             """;
 
-        return new NotificationContent(subject, body);
-    }
+		return new NotificationContent(subject, body);
+	}
 }
 
 public record NotificationRecipient
 {
-    public string Email { get; }
-    public string Name { get; }
+	public string Email { get; }
+	public string Name { get; }
 
-    private NotificationRecipient(string email, string name)
-    {
-        if (string.IsNullOrWhiteSpace(email))
-            throw new DomainException("Email cannot be empty");
-        
-        if (!email.Contains("@"))
-            throw new DomainException("Invalid email format");
-        
-        if (string.IsNullOrWhiteSpace(name))
-            throw new DomainException("Recipient name cannot be empty");
+	private NotificationRecipient(string email, string name)
+	{
+		if (string.IsNullOrWhiteSpace(email))
+			throw new CannotUnloadAppDomainException("Email cannot be empty");
 
-        Email = email;
-        Name = name;
-    }
+		if (!email.Contains("@"))
+			throw new CannotUnloadAppDomainException("Invalid email format");
 
-    public static NotificationRecipient Create(string email, string name) => new(email, name);
+		if (string.IsNullOrWhiteSpace(name))
+			throw new CannotUnloadAppDomainException("Recipient name cannot be empty");
+
+		Email = email;
+		Name = name;
+	}
+
+	public static NotificationRecipient Create(string email, string name) => new(email, name);
 }
 
 public enum NotificationType
 {
-    AppointmentConfirmation,
-    AppointmentCancellation,
-    AppointmentReminder
+	AppointmentConfirmation,
+	AppointmentCancellation,
+	AppointmentReminder
 }
 
 public enum NotificationStatus
 {
-    Pending,
-    Sent,
-    Failed
-} 
+	Pending,
+	Sent,
+	Failed
+}
