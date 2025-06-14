@@ -51,7 +51,7 @@ public class AppointmentConfirmationRepository : IAppointmentConfirmationReposit
         return appointment;
     }
 
-    public async Task UpdateAsync(AppointmentConfirmation appointment)
+    public async Task<AppointmentConfirmation> UpdateAsync(AppointmentConfirmation appointment)
     {
         var entity = InMemoryDb.AppointmentConfirmations.FirstOrDefault(a => a.Id == appointment.Id.Value);
         if (entity == null)
@@ -59,15 +59,19 @@ public class AppointmentConfirmationRepository : IAppointmentConfirmationReposit
             throw new DomainException($"Appointment confirmation with ID {appointment.Id.Value} not found");
         }
 
-        // Update entity
-        entity.Status = appointment.Status;
-        entity.Comments = appointment.Comments;
-        entity.UpdatedAt = appointment.UpdatedAt;
+        // Update entity properties
+        var updatedEntity = MapToEntity(appointment);
+        entity.AppointmentId = updatedEntity.AppointmentId;
+        entity.Status = updatedEntity.Status;
+        entity.Comments = updatedEntity.Comments;
+        entity.LastModifiedAt = DateTime.UtcNow;
 
         foreach (var domainEvent in appointment.DomainEvents)
         {
             await _mediator.Publish(domainEvent);
         }
+
+        return appointment;
     }
 
     public Task<List<AppointmentConfirmation>> GetUpcomingAppointmentsAsync()
@@ -103,43 +107,26 @@ public class AppointmentConfirmationRepository : IAppointmentConfirmationReposit
         return Task.FromResult(entities);
     }
 
-    private static AppointmentConfirmationEntity MapToEntity(AppointmentConfirmation appointment)
+    private AppointmentConfirmation MapToDomain(AppointmentConfirmationEntity entity)
+    {
+        return AppointmentConfirmation.Reconstitute(
+            AppointmentConfirmationId.From(entity.Id),
+            AppointmentId.From(entity.AppointmentId),
+            (AppointmentStatus)entity.Status,
+            entity.Comments
+        );
+    }
+
+    private AppointmentConfirmationEntity MapToEntity(AppointmentConfirmation domain)
     {
         return new AppointmentConfirmationEntity
         {
-            Id = appointment.Id.Value,
-            AppointmentId = appointment.AppointmentId.Value,
-            SlotId = appointment.SlotId.Value,
-            PatientId = appointment.PatientInfo.Id,
-            PatientName = appointment.PatientInfo.Name,
-            Status = appointment.Status,
-            Comments = appointment.Comments,
-            ReservedAt = appointment.ReservedAt.Value,
-            UpdatedAt = appointment.UpdatedAt
+            Id = domain.Id.Value,
+            AppointmentId = domain.AppointmentId.Value,
+            Status = (int)domain.Status,
+            Comments = domain.Comments,
+            CreatedAt = DateTime.UtcNow,
+            LastModifiedAt = DateTime.UtcNow
         };
-    }
-
-    private static AppointmentConfirmation MapToDomain(AppointmentConfirmationEntity entity)
-    {
-        var appointment = AppointmentConfirmation.Create(
-            entity.AppointmentId,
-            entity.SlotId,
-            entity.PatientId,
-            entity.PatientName,
-            entity.ReservedAt,
-            entity.Comments
-        );
-
-        // Handle status
-        if (entity.Status == AppointmentStatus.Confirmed)
-        {
-            appointment.Confirm(entity.Comments);
-        }
-        else if (entity.Status == AppointmentStatus.Cancelled)
-        {
-            appointment.Cancel(entity.Comments ?? "Unknown reason");
-        }
-
-        return appointment;
     }
 } 

@@ -1,5 +1,6 @@
 using AppointmentConfirmation.Api.Application.Services;
 using Microsoft.AspNetCore.Mvc;
+using Shared.RootEntity;
 
 namespace AppointmentConfirmation.Api.Controllers;
 
@@ -27,7 +28,7 @@ public class NotificationController : Microsoft.AspNetCore.Mvc.ControllerBase
 			);
 			return Ok();
 		}
-		catch (CannotUnloadAppDomainException ex)
+		catch (DomainException ex)
 		{
 			return BadRequest(ex.Message);
 		}
@@ -47,7 +48,7 @@ public class NotificationController : Microsoft.AspNetCore.Mvc.ControllerBase
 			);
 			return Ok();
 		}
-		catch (CannotUnloadAppDomainException ex)
+		catch (DomainException ex)
 		{
 			return BadRequest(ex.Message);
 		}
@@ -66,7 +67,7 @@ public class NotificationController : Microsoft.AspNetCore.Mvc.ControllerBase
 			);
 			return Ok();
 		}
-		catch (CannotUnloadAppDomainException ex)
+		catch (DomainException ex)
 		{
 			return BadRequest(ex.Message);
 		}
@@ -80,7 +81,7 @@ public class NotificationController : Microsoft.AspNetCore.Mvc.ControllerBase
 			await _notificationService.ResendFailedNotificationsAsync();
 			return Ok();
 		}
-		catch (CannotUnloadAppDomainException ex)
+		catch (DomainException ex)
 		{
 			return BadRequest(ex.Message);
 		}

@@ -1,96 +1,101 @@
-using DoctorAppointmentManagement.Core.Domain.Enums;
+using DoctorAppointmentManagement.Core.Domain.Events;
 using Shared.RootEntity;
 
 namespace DoctorAppointmentManagement.Core.Domain.Models;
 
 public class AppointmentConfirmation : AggregateRoot
 {
-    private AppointmentConfirmation() { } // For EF Core
+	private AppointmentConfirmation() { } // For EF Core
 
-    private AppointmentConfirmation(
-        AppointmentConfirmationId id,
-        AppointmentId appointmentId,
-        SlotId slotId,
-        PatientInfo patientInfo,
-        AppointmentDateTime reservedAt,
-        AppointmentStatus status,
-        string? comments = null)
-    {
-        Id = id;
-        AppointmentId = appointmentId;
-        SlotId = slotId;
-        PatientInfo = patientInfo;
-        ReservedAt = reservedAt;
-        Status = status;
-        Comments = comments;
-        UpdatedAt = DateTime.UtcNow;
+	private AppointmentConfirmation(
+		AppointmentConfirmationId id,
+		AppointmentId appointmentId,
+		SlotId slotId,
+		PatientInfo patientInfo,
+		AppointmentDateTime reservedAt,
+		AppointmentStatus status,
+		string? comments = null)
+	{
+		Id = id;
+		AppointmentId = appointmentId;
+		SlotId = slotId;
+		PatientInfo = patientInfo;
+		ReservedAt = reservedAt;
+		Status = status;
+		Comments = comments;
+		UpdatedAt = DateTime.UtcNow;
 
-        AddDomainEvent(new AppointmentStatusChangedDomainEvent(this));
-    }
+		AddDomainEvent(new AppointmentStatusChangedDomainEvent(this));
+	}
 
-    public AppointmentConfirmationId Id { get; private set; }
-    public AppointmentId AppointmentId { get; private set; }
-    public SlotId SlotId { get; private set; }
-    public PatientInfo PatientInfo { get; private set; }
-    public AppointmentDateTime ReservedAt { get; private set; }
-    public AppointmentStatus Status { get; private set; }
-    public string? Comments { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+	public AppointmentConfirmationId Id { get; private set; }
+	public AppointmentId AppointmentId { get; private set; }
+	public SlotId SlotId { get; private set; }
+	public PatientInfo PatientInfo { get; private set; }
+	public AppointmentDateTime ReservedAt { get; private set; }
+	public AppointmentStatus Status { get; private set; }
+	public string? Comments { get; private set; }
+	public DateTime UpdatedAt { get; private set; }
 
-    public static AppointmentConfirmation Create(
-        Guid appointmentId,
-        Guid slotId,
-        int patientId,
-        string patientName,
-        DateTime reservedAt,
-        string? comments = null)
-    {
-        return new AppointmentConfirmation(
-            AppointmentConfirmationId.Create(),
-            AppointmentId.From(appointmentId),
-            SlotId.From(slotId),
-            PatientInfo.Create(patientId, patientName),
-            AppointmentDateTime.From(reservedAt),
-            AppointmentStatus.Pending,
-            comments
-        );
-    }
+	public static AppointmentConfirmation Create(
+		Guid appointmentId,
+		Guid slotId,
+		int patientId,
+		string patientName,
+		DateTime reservedAt,
+		string? comments = null)
+	{
+		return new AppointmentConfirmation(
+			AppointmentConfirmationId.Create(),
+			AppointmentId.From(appointmentId),
+			SlotId.From(slotId),
+			PatientInfo.Create(patientId.ToString(), patientName, "", ""),
+			AppointmentDateTime.From(reservedAt),
+			AppointmentStatus.Pending,
+			comments
+		);
+	}
 
-    public void Confirm(string? comments = null)
-    {
-        if (Status != AppointmentStatus.Pending)
-        {
-            throw new DomainException("Can only confirm pending appointments");
-        }
+	public void Confirm(string? comments = null)
+	{
+		if (Status != AppointmentStatus.Pending)
+		{
+			throw new DomainException("Can only confirm pending appointments");
+		}
 
-        Status = AppointmentStatus.Confirmed;
-        Comments = comments;
-        UpdatedAt = DateTime.UtcNow;
+		Status = AppointmentStatus.Confirmed;
+		Comments = comments;
+		UpdatedAt = DateTime.UtcNow;
 
-        AddDomainEvent(new AppointmentStatusChangedDomainEvent(this));
-    }
+		AddDomainEvent(new AppointmentStatusChangedDomainEvent(this));
+	}
 
-    public void Cancel(string reason)
-    {
-        if (Status != AppointmentStatus.Pending && Status != AppointmentStatus.Confirmed)
-        {
-            throw new DomainException("Can only cancel pending or confirmed appointments");
-        }
+	private void AddDomainEvent(AppointmentStatusChangedDomainEvent appointmentStatusChangedDomainEvent)
+	{
+		throw new NotImplementedException();
+	}
 
-        if (string.IsNullOrWhiteSpace(reason))
-        {
-            throw new DomainException("Cancellation reason is required");
-        }
+	public void Cancel(string reason)
+	{
+		if (Status != AppointmentStatus.Pending && Status != AppointmentStatus.Confirmed)
+		{
+			throw new DomainException("Can only cancel pending or confirmed appointments");
+		}
 
-        Status = AppointmentStatus.Cancelled;
-        Comments = reason;
-        UpdatedAt = DateTime.UtcNow;
+		if (string.IsNullOrWhiteSpace(reason))
+		{
+			throw new DomainException("Cancellation reason is required");
+		}
 
-        AddDomainEvent(new AppointmentStatusChangedDomainEvent(this));
-    }
+		Status = AppointmentStatus.Cancelled;
+		Comments = reason;
+		UpdatedAt = DateTime.UtcNow;
 
-    public bool CanBeModified()
-    {
-        return Status == AppointmentStatus.Pending;
-    }
-} 
+		AddDomainEvent(new AppointmentStatusChangedDomainEvent(this));
+	}
+
+	public bool CanBeModified()
+	{
+		return Status == AppointmentStatus.Pending;
+	}
+}

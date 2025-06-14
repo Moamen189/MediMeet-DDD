@@ -1,40 +1,58 @@
 using Shared.RootEntity;
+using DoctorAvailability.Business.DomainModels;
 
 namespace DoctorAvailability.Abstractions.Models
 {
     public class Doctor : AggregateRoot
     {
-        public DoctorId Id { get; private set; }
-        public string Name { get; private set; }
-        public Specialty Specialty { get; private set; }
-        public List<TimeSlot> TimeSlots { get; private set; } = new();
-
-        private Doctor() { }
-
-        public static Doctor Create(DoctorId id, string name, Specialty specialty)
+        private readonly List<TimeSlot> _availableSlots;
+        
+        private Doctor()
         {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new DomainException("Doctor name cannot be empty");
+            _availableSlots = new List<TimeSlot>();
+        }
 
-            return new Doctor
-            {
-                Id = id,
-                Name = name,
-                Specialty = specialty
-            };
+        private Doctor(DoctorId id, DoctorName name, Specialty specialty)
+        {
+            Id = id;
+            Name = name;
+            Specialty = specialty;
+            _availableSlots = new List<TimeSlot>();
+        }
+
+        public DoctorId Id { get; private set; }
+        public DoctorName Name { get; private set; }
+        public Specialty Specialty { get; private set; }
+        public IReadOnlyList<TimeSlot> AvailableSlots => _availableSlots.AsReadOnly();
+
+        public static Doctor Create(int id, string name, string specialty)
+        {
+            return new Doctor(
+                DoctorId.From(id),
+                DoctorName.From(name),
+                Specialty.From(specialty)
+            );
         }
 
         public void AddTimeSlot(TimeSlot slot)
         {
-            if (TimeSlots.Any(s => s.Overlaps(slot)))
+            if (_availableSlots.Any(s => s.OverlapsWith(slot)))
                 throw new DomainException("Time slot overlaps with existing slot");
 
-            TimeSlots.Add(slot);
+            _availableSlots.Add(slot);
+            AddDomainEvent(new AvailabilitySlotAddedDomainEvent(this, slot));
         }
 
         public void RemoveTimeSlot(TimeSlot slot)
         {
-            TimeSlots.Remove(slot);
+            if (!_availableSlots.Contains(slot))
+                throw new DomainException("Time slot not found");
+
+            if (slot.IsReserved)
+                throw new DomainException("Cannot remove a reserved slot");
+
+            _availableSlots.Remove(slot);
+            AddDomainEvent(new AvailabilitySlotRemovedDomainEvent(this, slot));
         }
     }
 

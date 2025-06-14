@@ -1,21 +1,16 @@
 using AppointmentConfirmation.Api.Domain.Models;
 using AppointmentConfirmation.Api.Domain.Repositories;
-using AppointmentConfirmation.Shared;
-using Microsoft.Extensions.Logging;
+using Shared.RootEntity;
 
 namespace AppointmentConfirmation.Api.Application.Services;
 
 public class NotificationService
 {
     private readonly INotificationRepository _notificationRepository;
-    private readonly ILogger<NotificationService> _logger;
 
-    public NotificationService(
-        INotificationRepository notificationRepository,
-        ILogger<NotificationService> logger)
+    public NotificationService(INotificationRepository notificationRepository)
     {
         _notificationRepository = notificationRepository;
-        _logger = logger;
     }
 
     public async Task SendAppointmentConfirmationAsync(
@@ -24,15 +19,18 @@ public class NotificationService
         DateTime appointmentDateTime,
         string doctorName)
     {
-        var notification = Notification.CreateAppointmentConfirmation(
-            recipientEmail,
+        var recipient = NotificationRecipient.Create(recipientEmail, recipientName);
+        var content = NotificationContent.CreateAppointmentConfirmation(
             recipientName,
             appointmentDateTime,
-            doctorName
-        );
+            doctorName);
+
+        var notification = Notification.Create(
+            content,
+            recipient,
+            NotificationMessageType.AppointmentConfirmation);
 
         await _notificationRepository.AddAsync(notification);
-        await SendNotificationAsync(notification);
     }
 
     public async Task SendAppointmentCancellationAsync(
@@ -42,16 +40,19 @@ public class NotificationService
         string doctorName,
         string cancellationReason)
     {
-        var notification = Notification.CreateAppointmentCancellation(
-            recipientEmail,
+        var recipient = NotificationRecipient.Create(recipientEmail, recipientName);
+        var content = NotificationContent.CreateAppointmentCancellation(
             recipientName,
             appointmentDateTime,
             doctorName,
-            cancellationReason
-        );
+            cancellationReason);
+
+        var notification = Notification.Create(
+            content,
+            recipient,
+            NotificationMessageType.AppointmentCancellation);
 
         await _notificationRepository.AddAsync(notification);
-        await SendNotificationAsync(notification);
     }
 
     public async Task SendAppointmentReminderAsync(
@@ -60,53 +61,41 @@ public class NotificationService
         DateTime appointmentDateTime,
         string doctorName)
     {
-        var notification = Notification.CreateAppointmentReminder(
-            recipientEmail,
+        var recipient = NotificationRecipient.Create(recipientEmail, recipientName);
+        var content = NotificationContent.CreateAppointmentReminder(
             recipientName,
             appointmentDateTime,
-            doctorName
-        );
+            doctorName);
+
+        var notification = Notification.Create(
+            content,
+            recipient,
+            NotificationMessageType.AppointmentReminder);
 
         await _notificationRepository.AddAsync(notification);
-        await SendNotificationAsync(notification);
     }
 
-    public async Task ResendFailedNotificationsAsync()
+    public async Task<List<Notification>> GetPendingNotificationsAsync()
     {
-        var failedNotifications = await _notificationRepository.GetFailedNotificationsAsync();
-        foreach (var notification in failedNotifications)
-        {
-            await SendNotificationAsync(notification);
-        }
+        return await _notificationRepository.GetPendingNotificationsAsync();
     }
 
-    private async Task SendNotificationAsync(Notification notification)
+    public async Task<List<Notification>> GetFailedNotificationsAsync()
     {
-        try
-        {
-            // Log the notification
-            var formattedMessage = $"""
-                ==============================
-                
-                Receiver: {notification.Recipient.Email}
-                Subject: {notification.Content.Subject}
-                
-                Message:
-                {notification.Content.Body}
-                
-                ==============================
-                """;
-            _logger.LogInformation(formattedMessage);
+        return await _notificationRepository.GetFailedNotificationsAsync();
+    }
 
-            // Mark as sent
-            notification.MarkAsSent();
-            await _notificationRepository.UpdateAsync(notification);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to send notification {NotificationId}", notification.Id.Value);
-            notification.MarkAsFailed(ex.Message);
-            await _notificationRepository.UpdateAsync(notification);
-        }
+    public async Task MarkAsSentAsync(NotificationId id)
+    {
+        var notification = await _notificationRepository.GetByIdAsync(id);
+        notification.MarkAsSent();
+        await _notificationRepository.UpdateAsync(notification);
+    }
+
+    public async Task MarkAsFailedAsync(NotificationId id)
+    {
+        var notification = await _notificationRepository.GetByIdAsync(id);
+        notification.MarkAsFailed();
+        await _notificationRepository.UpdateAsync(notification);
     }
 } 

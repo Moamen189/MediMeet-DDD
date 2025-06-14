@@ -93,11 +93,45 @@ public record AppointmentDateTime
 
     private AppointmentDateTime(DateTime value)
     {
+        if (value < DateTime.UtcNow)
+        {
+            throw new DomainException("Cannot set appointment date/time in the past");
+        }
+
+        // Ensure minimum notice period
+        var minimumNotice = DateTime.UtcNow.AddHours(1);
+        if (value < minimumNotice)
+        {
+            throw new DomainException("Appointments must be scheduled at least 1 hour in advance");
+        }
+
         Value = value.ToUniversalTime();
+    }
+
+    public static AppointmentDateTime Create(DateTime dateTime)
+    {
+        return new AppointmentDateTime(dateTime);
     }
 
     public static AppointmentDateTime From(DateTime dateTime)
     {
         return new AppointmentDateTime(dateTime);
+    }
+
+    public bool IsInPast()
+    {
+        return Value < DateTime.UtcNow;
+    }
+
+    public bool IsWithinCancellationPeriod()
+    {
+        var cancellationDeadline = Value.AddHours(-2);
+        return DateTime.UtcNow > cancellationDeadline;
+    }
+
+    public bool IsWithinReschedulePeriod()
+    {
+        var rescheduleDeadline = Value.AddHours(-2);
+        return DateTime.UtcNow > rescheduleDeadline;
     }
 } 

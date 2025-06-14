@@ -1,5 +1,8 @@
 using AppointmentBooking.Domain.DomainModels;
 using AppointmentBooking.Infrastructure.Entities;
+using AppointmentBooking.Domain.IRepository;
+using AppointmentBooking.Infrastructure.Repository;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AppointmentBooking.Infrastructure.Extensions;
 
@@ -28,5 +31,13 @@ public static class Extensions
             DoctorName.From(entity.DoctorName),
             AppointmentDateTime.From(entity.ReservedAt)
         );
+    }
+
+    public static IServiceCollection AddAppointmentBookingInfrastructure(this IServiceCollection services)
+    {
+        services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+        services.AddScoped<IPatientRepository, PatientRepository>();
+        
+        return services;
     }
 } 

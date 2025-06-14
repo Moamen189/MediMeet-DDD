@@ -4,5 +4,5 @@ namespace AppointmentConfirmation.Api.Infrastructure.Database;
 
 public static class InMemoryDb
 {
-    public static List<NotificationEntity> Notifications = new();
+    public static List<NotificationEntity> Notifications { get; } = new();
 } 

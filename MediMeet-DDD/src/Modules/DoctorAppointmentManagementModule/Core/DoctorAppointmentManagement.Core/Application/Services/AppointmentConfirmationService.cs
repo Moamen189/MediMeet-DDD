@@ -1,6 +1,7 @@
+using DoctorAppointmentManagement.Core.Application.Dtos;
 using DoctorAppointmentManagement.Core.Domain.Models;
 using DoctorAppointmentManagement.Core.Domain.Repositories;
-using DoctorAppointmentManagement.Core.Application.Dtos;
+using Shared.RootEntity;
 
 namespace DoctorAppointmentManagement.Core.Application.Services;
 
@@ -14,39 +15,41 @@ public class AppointmentConfirmationService
     }
 
     public async Task<AppointmentConfirmationDto> CreateAppointmentConfirmationAsync(
-        CreateAppointmentConfirmationDto dto)
+        CreateAppointmentConfirmationDto request)
     {
-        var appointment = AppointmentConfirmation.Create(
-            dto.AppointmentId,
-            dto.SlotId,
-            dto.PatientId,
-            dto.PatientName,
-            dto.ReservedAt,
-            dto.Comments
-        );
+        var appointmentConfirmation = AppointmentConfirmation.Create(
+            AppointmentId.From(request.AppointmentId),
+            request.Comments);
 
-        await _repository.AddAsync(appointment);
-        return MapToDto(appointment);
+        await _repository.AddAsync(appointmentConfirmation);
+
+        return MapToDto(appointmentConfirmation);
     }
 
     public async Task<AppointmentConfirmationDto> ConfirmAppointmentAsync(
         Guid appointmentId,
-        string? comments = null)
+        string comments)
     {
-        var appointment = await _repository.GetByAppointmentIdAsync(AppointmentId.From(appointmentId));
-        appointment.Confirm(comments);
-        await _repository.UpdateAsync(appointment);
-        return MapToDto(appointment);
+        var appointmentConfirmation = await _repository.GetByAppointmentIdAsync(
+            AppointmentId.From(appointmentId));
+
+        appointmentConfirmation.Confirm(comments);
+        await _repository.UpdateAsync(appointmentConfirmation);
+
+        return MapToDto(appointmentConfirmation);
     }
 
     public async Task<AppointmentConfirmationDto> CancelAppointmentAsync(
         Guid appointmentId,
         string reason)
     {
-        var appointment = await _repository.GetByAppointmentIdAsync(AppointmentId.From(appointmentId));
-        appointment.Cancel(reason);
-        await _repository.UpdateAsync(appointment);
-        return MapToDto(appointment);
+        var appointmentConfirmation = await _repository.GetByAppointmentIdAsync(
+            AppointmentId.From(appointmentId));
+
+        appointmentConfirmation.Cancel(reason);
+        await _repository.UpdateAsync(appointmentConfirmation);
+
+        return MapToDto(appointmentConfirmation);
     }
 
     public async Task<List<AppointmentConfirmationDto>> GetUpcomingAppointmentsAsync()
@@ -57,7 +60,7 @@ public class AppointmentConfirmationService
 
     public async Task<List<AppointmentConfirmationDto>> GetAppointmentsByPatientAsync(int patientId)
     {
-        var appointments = await _repository.GetAppointmentsByPatientAsync(patientId);
+        var appointments = await _repository.GetByPatientIdAsync(patientId);
         return appointments.Select(MapToDto).ToList();
     }
 
@@ -67,13 +70,10 @@ public class AppointmentConfirmationService
         {
             Id = appointment.Id.Value,
             AppointmentId = appointment.AppointmentId.Value,
-            SlotId = appointment.SlotId.Value,
-            PatientId = appointment.PatientInfo.Id,
-            PatientName = appointment.PatientInfo.Name,
             Status = appointment.Status,
             Comments = appointment.Comments,
-            ReservedAt = appointment.ReservedAt.Value,
-            UpdatedAt = appointment.UpdatedAt
+            CreatedAt = appointment.CreatedAt,
+            LastModifiedAt = appointment.LastModifiedAt
         };
     }
 } 

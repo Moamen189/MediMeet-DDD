@@ -152,16 +152,16 @@ public class NotificationRecipient
 	}
 }
 
-public enum NotificationType
+public enum NotificationMessageType
 {
 	AppointmentConfirmation,
 	AppointmentCancellation,
 	AppointmentReminder
 }
 
-public enum NotificationStatus
-{
-	Pending,
-	Sent,
-	Failed
-}
+//public enum NotificationStatus
+//{
+//	Pending,
+//	Sent,
+//	Failed
+//}
