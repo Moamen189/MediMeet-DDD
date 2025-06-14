@@ -75,7 +75,7 @@ public record SlotReservedDomainEvent : IDomainEvent
 
 public record SlotReservationCancelledDomainEvent : IDomainEvent
 {
-    public SlotReservationCancelledDomainEvent(TimeSlot slot)
+    public SlotReservationCancelledDomainEvent(Abstractions.Models.DoctorId id, TimeSlot slot)
     {
         DoctorId = slot.DoctorId;
         SlotId = slot.Id;
