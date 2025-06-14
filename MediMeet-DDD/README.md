@@ -291,6 +291,7 @@ src/
     └── Common infrastructure and contracts
 ```
 
+
 ### Development Guidelines
 
 1. **Domain Model**
