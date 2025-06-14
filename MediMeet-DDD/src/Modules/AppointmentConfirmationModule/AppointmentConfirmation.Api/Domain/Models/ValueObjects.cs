@@ -1,3 +1,5 @@
+using Shared.RootEntity;
+
 namespace AppointmentConfirmation.Api.Domain.Models;
 
 public record NotificationId
@@ -13,21 +15,26 @@ public record NotificationId
 	public static NotificationId From(Guid id) => new(id);
 }
 
-public record NotificationContent
+public class NotificationContent
 {
-	public string Subject { get; }
-	public string Body { get; }
+	public string Subject { get; private set; }
+	public string Body { get; private set; }
 
-	private NotificationContent(string subject, string body)
+	private NotificationContent() { }
+
+	public static NotificationContent Create(string subject, string body)
 	{
 		if (string.IsNullOrWhiteSpace(subject))
-			throw new CannotUnloadAppDomainException("Notification subject cannot be empty");
+			throw new DomainException("Notification subject cannot be empty");
 
 		if (string.IsNullOrWhiteSpace(body))
-			throw new CannotUnloadAppDomainException("Notification body cannot be empty");
+			throw new DomainException("Notification body cannot be empty");
 
-		Subject = subject;
-		Body = body;
+		return new NotificationContent
+		{
+			Subject = subject,
+			Body = body
+		};
 	}
 
 	public static NotificationContent CreateAppointmentConfirmation(
@@ -47,7 +54,11 @@ public record NotificationContent
             MediMeet Team
             """;
 
-		return new NotificationContent(subject, body);
+		return new NotificationContent
+		{
+			Subject = subject,
+			Body = body
+		};
 	}
 
 	public static NotificationContent CreateAppointmentCancellation(
@@ -70,7 +81,11 @@ public record NotificationContent
             MediMeet Team
             """;
 
-		return new NotificationContent(subject, body);
+		return new NotificationContent
+		{
+			Subject = subject,
+			Body = body
+		};
 	}
 
 	public static NotificationContent CreateAppointmentReminder(
@@ -90,31 +105,51 @@ public record NotificationContent
             MediMeet Team
             """;
 
-		return new NotificationContent(subject, body);
+		return new NotificationContent
+		{
+			Subject = subject,
+			Body = body
+		};
 	}
 }
 
-public record NotificationRecipient
+public class NotificationRecipient
 {
-	public string Email { get; }
-	public string Name { get; }
+	public string Email { get; private set; }
+	public string Name { get; private set; }
 
-	private NotificationRecipient(string email, string name)
+	private NotificationRecipient() { }
+
+	public static NotificationRecipient Create(string email, string name)
 	{
 		if (string.IsNullOrWhiteSpace(email))
-			throw new CannotUnloadAppDomainException("Email cannot be empty");
+			throw new DomainException("Recipient email cannot be empty");
 
-		if (!email.Contains("@"))
-			throw new CannotUnloadAppDomainException("Invalid email format");
+		if (!IsValidEmail(email))
+			throw new DomainException("Invalid email format");
 
 		if (string.IsNullOrWhiteSpace(name))
-			throw new CannotUnloadAppDomainException("Recipient name cannot be empty");
+			throw new DomainException("Recipient name cannot be empty");
 
-		Email = email;
-		Name = name;
+		return new NotificationRecipient
+		{
+			Email = email,
+			Name = name
+		};
 	}
 
-	public static NotificationRecipient Create(string email, string name) => new(email, name);
+	private static bool IsValidEmail(string email)
+	{
+		try
+		{
+			var addr = new System.Net.Mail.MailAddress(email);
+			return addr.Address == email;
+		}
+		catch
+		{
+			return false;
+		}
+	}
 }
 
 public enum NotificationType

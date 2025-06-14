@@ -1,45 +1,27 @@
-﻿using DoctorAvailability.Business.DomainModels;
-using DoctorAvailability.Business.Extentions;
-using DoctorAvailability.DataAccess.IRepository;
-using DoctorAvailability.DataAccess.Repository;
+﻿using DoctorAvailability.Abstractions.Models;
+using DoctorAvailability.Abstractions.Repositories;
 
 namespace DoctorAvailability.Business.Services;
 
-
 public class SlotServices
 {
-    private readonly ISlotRepository _slotRepository;
+    private readonly IDoctorRepository _doctorRepository;
 
-    public SlotServices(ISlotRepository slotRepository)
+    public SlotServices(IDoctorRepository doctorRepository)
     {
-        _slotRepository = slotRepository;
+        _doctorRepository = doctorRepository;
     }
 
-    public void CreateSlot(SlotDto slotDto)
+    public async Task<List<TimeSlot>> GetAvailableSlotsAsync(DoctorId doctorId, DateTime startDate, DateTime endDate)
     {
-        var slot = slotDto.MapToModule();
-        _slotRepository.Create(slot);
+        return await _doctorRepository.GetAvailableSlotsAsync(doctorId, startDate, endDate);
     }
 
-
-    public List<SlotDto> GetAllAvailable()
+    public async Task AddTimeSlotAsync(DoctorId doctorId, DateTime startTime, DateTime endTime)
     {
-        return _slotRepository.GetAllAvailable().Where(s=>!s.IsReserved).Select(s=>s.MapToDto()).ToList();
-    }
-    public List<SlotDto> GetAll()
-    {
-        return  _slotRepository.GetAll().Select(s => s.MapToDto()).ToList();
-    }
-    public bool ReserveSlot(Guid slotId)
-    {
-        var slot = _slotRepository.GetById(slotId);
-        if (slot == null)
-        {
-            return false;
-        }
-
-        slot.IsReserved = true;
-        _slotRepository.Update(slot);
-        return true;
+        var doctor = await _doctorRepository.GetByIdAsync(doctorId);
+        var slot = TimeSlot.Create(startTime, endTime);
+        doctor.AddTimeSlot(slot);
+        await _doctorRepository.UpdateAsync(doctor);
     }
 }

@@ -1,5 +1,5 @@
-using DoctorAvailability.Business.DomainModels;
-using DoctorAvailability.DataAccess.IRepository;
+using DoctorAvailability.Abstractions.Models;
+using DoctorAvailability.Abstractions.Repositories;
 using MediatR;
 
 namespace DoctorAvailability.Business.Services;
@@ -22,18 +22,14 @@ public class DoctorAvailabilityService
         return await _doctorRepository.GetByIdAsync(DoctorId.From(doctorId));
     }
 
-    public async Task<List<Doctor>> GetDoctorsBySpecialtyAsync(string specialty)
+    public async Task<List<Doctor>> GetDoctorsBySpecialtyAsync(Specialty specialty)
     {
-        return await _doctorRepository.GetDoctorsBySpecialtyAsync(Specialty.From(specialty));
+        return await _doctorRepository.GetDoctorsBySpecialtyAsync(specialty);
     }
 
-    public async Task<List<TimeSlot>> GetAvailableSlotsAsync(int doctorId, DateTime startDate, DateTime endDate)
+    public async Task<List<TimeSlot>> GetAvailableSlotsAsync(DoctorId doctorId, DateTime startDate, DateTime endDate)
     {
-        return await _doctorRepository.GetAvailableSlotsAsync(
-            DoctorId.From(doctorId),
-            startDate,
-            endDate
-        );
+        return await _doctorRepository.GetAvailableSlotsAsync(doctorId, startDate, endDate);
     }
 
     public async Task AddAvailabilitySlotAsync(
@@ -122,5 +118,19 @@ public class DoctorAvailabilityService
         {
             return false;
         }
+    }
+
+    public async Task AddDoctorAsync(string name, Specialty specialty)
+    {
+        var doctor = Doctor.Create(DoctorId.New(), name, specialty);
+        await _doctorRepository.AddAsync(doctor);
+    }
+
+    public async Task AddTimeSlotAsync(DoctorId doctorId, DateTime startTime, DateTime endTime)
+    {
+        var doctor = await _doctorRepository.GetByIdAsync(doctorId);
+        var slot = TimeSlot.Create(startTime, endTime);
+        doctor.AddTimeSlot(slot);
+        await _doctorRepository.UpdateAsync(doctor);
     }
 } 

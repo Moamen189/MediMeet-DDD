@@ -5,11 +5,10 @@ namespace DoctorAppointmentManagement.Core.Domain.Repositories;
 
 public interface IAppointmentConfirmationRepository
 {
-    Task<AppointmentConfirmation> GetByIdAsync(AppointmentConfirmationId id);
-    Task<AppointmentConfirmation> GetByAppointmentIdAsync(AppointmentId appointmentId);
-    Task<AppointmentConfirmation> AddAsync(AppointmentConfirmation appointment);
+    Task<AppointmentConfirmation> GetByIdAsync(string id);
+    Task<List<AppointmentConfirmation>> GetByPatientIdAsync(string patientId);
+    Task<List<AppointmentConfirmation>> GetByDoctorIdAsync(string doctorId);
+    Task<List<AppointmentConfirmation>> GetByStatusAsync(Models.AppointmentStatus status);
+    Task AddAsync(AppointmentConfirmation appointment);
     Task UpdateAsync(AppointmentConfirmation appointment);
-    Task<List<AppointmentConfirmation>> GetUpcomingAppointmentsAsync();
-    Task<List<AppointmentConfirmation>> GetAppointmentsByPatientAsync(int patientId);
-    Task<List<AppointmentConfirmation>> GetAppointmentsByStatusAsync(AppointmentStatus status);
 } 

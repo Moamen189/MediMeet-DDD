@@ -7,9 +7,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\..\Shared\Shared\Shared.csproj" />
-      <ProjectReference Include="..\..\DoctorAppointmentManagementModule\DoctorAppointmentManagement.Shared\DoctorAppointmentManagement.Shared.csproj" />
-      <ProjectReference Include="..\DoctorAvailability.DataAccess\DoctorAvailability.DataAccess.csproj" />
+        <PackageReference Include="MediatR" Version="12.4.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\Shared\Shared\Shared.csproj" />
+        <ProjectReference Include="..\..\DoctorAppointmentManagementModule\DoctorAppointmentManagement.Shared\DoctorAppointmentManagement.Shared.csproj" />
+        <ProjectReference Include="..\DoctorAvailability.Abstractions\DoctorAvailability.Abstractions.csproj" />
+        <ProjectReference Include="..\DoctorAvailability.Shared\DoctorAvailability.Shared.csproj" />
     </ItemGroup>
 
 </Project>

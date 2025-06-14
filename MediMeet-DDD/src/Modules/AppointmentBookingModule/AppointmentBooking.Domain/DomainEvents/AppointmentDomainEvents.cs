@@ -1,58 +1,44 @@
-using AppointmentBooking.Domain.DomainModels;
-using Shared.EventBus;
+using Shared.RootEntity;
 
-namespace AppointmentBooking.Domain.DomainEvents;
-
-public record AppointmentCreatedDomainEvent : IDomainEvent
+namespace AppointmentBooking.Domain.DomainEvents
 {
-    public AppointmentCreatedDomainEvent(Appointment appointment)
-    {
-        AppointmentId = appointment.Id;
-        PatientName = appointment.PatientName;
-        DoctorName = appointment.DoctorName;
-        ReservedAt = appointment.ReservedAt;
-        SlotId = appointment.SlotId;
-    }
+    public record AppointmentCreatedDomainEvent(
+        string AppointmentId,
+        string PatientId,
+        string PatientName,
+        string DoctorId,
+        string DoctorName,
+        DateTime ReservedAt) : IDomainEvent;
 
-    public AppointmentId AppointmentId { get; }
-    public PatientName PatientName { get; }
-    public DoctorName DoctorName { get; }
-    public AppointmentDateTime ReservedAt { get; }
-    public Guid SlotId { get; }
-}
+    public record AppointmentCancelledDomainEvent(
+        string AppointmentId,
+        string PatientId,
+        string PatientName,
+        string DoctorId,
+        string DoctorName,
+        DateTime ReservedAt,
+        string CancellationReason) : IDomainEvent;
 
-public record AppointmentCancelledDomainEvent : IDomainEvent
-{
-    public AppointmentCancelledDomainEvent(Appointment appointment)
-    {
-        AppointmentId = appointment.Id;
-        PatientName = appointment.PatientName;
-        DoctorName = appointment.DoctorName;
-        ReservedAt = appointment.ReservedAt;
-        SlotId = appointment.SlotId;
-    }
+    public record AppointmentConfirmedDomainEvent(
+        string AppointmentId,
+        string PatientId,
+        string PatientName,
+        string DoctorId,
+        string DoctorName,
+        DateTime ReservedAt) : IDomainEvent;
 
-    public AppointmentId AppointmentId { get; }
-    public PatientName PatientName { get; }
-    public DoctorName DoctorName { get; }
-    public AppointmentDateTime ReservedAt { get; }
-    public Guid SlotId { get; }
-}
+    public record AppointmentRescheduledDomainEvent(
+        string AppointmentId,
+        string PatientId,
+        string PatientName,
+        string DoctorId,
+        string DoctorName,
+        DateTime OldReservedAt,
+        DateTime NewReservedAt) : IDomainEvent;
 
-public record AppointmentConfirmedDomainEvent : IDomainEvent
-{
-    public AppointmentConfirmedDomainEvent(Appointment appointment)
-    {
-        AppointmentId = appointment.Id;
-        PatientName = appointment.PatientName;
-        DoctorName = appointment.DoctorName;
-        ReservedAt = appointment.ReservedAt;
-        SlotId = appointment.SlotId;
-    }
-
-    public AppointmentId AppointmentId { get; }
-    public PatientName PatientName { get; }
-    public DoctorName DoctorName { get; }
-    public AppointmentDateTime ReservedAt { get; }
-    public Guid SlotId { get; }
+    public record PatientContactInfoUpdatedDomainEvent(
+        string PatientId,
+        string Name,
+        string Email,
+        string PhoneNumber) : IDomainEvent;
 } 

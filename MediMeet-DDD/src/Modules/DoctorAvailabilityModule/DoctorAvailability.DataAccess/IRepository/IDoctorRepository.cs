@@ -1,4 +1,5 @@
-﻿using DoctorAvailability.DataAccess.Entities;
+﻿using DoctorAvailability.Abstractions.Models;
+using Doctor = DoctorAvailability.Abstractions.Models.Doctor;
 
 namespace DoctorAvailability.DataAccess.IRepository;
 
