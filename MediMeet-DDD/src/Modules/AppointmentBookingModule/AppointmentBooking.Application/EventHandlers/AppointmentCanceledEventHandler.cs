@@ -1,4 +1,4 @@
-using AppointmentBooking.Domain.IRepository;
+﻿using AppointmentBooking.Domain.IRepository;
 using DoctorAppointmentManagement.Shared.IntegrationEvents;
 using Shared.EventBus;
 

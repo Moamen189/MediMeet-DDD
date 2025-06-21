@@ -1,5 +1,4 @@
 using Shared.RootEntity;
-using DoctorAvailability.Business.DomainModels;
 
 namespace DoctorAvailability.Abstractions.Models
 {
@@ -40,7 +39,7 @@ namespace DoctorAvailability.Abstractions.Models
                 throw new DomainException("Time slot overlaps with existing slot");
 
             _availableSlots.Add(slot);
-            AddDomainEvent(new AvailabilitySlotAddedDomainEvent(this, slot));
+            AddDomainEvent(new AvailabilitySlotAddedEvent(this, slot));
         }
 
         public void RemoveTimeSlot(TimeSlot slot)
@@ -48,11 +47,11 @@ namespace DoctorAvailability.Abstractions.Models
             if (!_availableSlots.Contains(slot))
                 throw new DomainException("Time slot not found");
 
-            if (slot.IsReserved)
+            if (!slot.IsAvailable)
                 throw new DomainException("Cannot remove a reserved slot");
 
             _availableSlots.Remove(slot);
-            AddDomainEvent(new AvailabilitySlotRemovedDomainEvent(this, slot));
+            AddDomainEvent(new AvailabilitySlotRemovedEvent(this, slot));
         }
     }
 
@@ -64,6 +63,22 @@ namespace DoctorAvailability.Abstractions.Models
 
         public static DoctorId New() => new(Guid.NewGuid());
         public static DoctorId From(Guid id) => new(id);
+        public static DoctorId From(int id) => new(new Guid(id.ToString()));
+    }
+
+    public record DoctorName
+    {
+        public string Value { get; }
+
+        private DoctorName(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                throw new DomainException("Doctor name cannot be empty");
+            
+            Value = value;
+        }
+
+        public static DoctorName From(string name) => new(name);
     }
 
     public enum Specialty
@@ -80,13 +95,15 @@ namespace DoctorAvailability.Abstractions.Models
 
     public class TimeSlot
     {
+        public Guid Id { get; private set; }
         public DateTime StartTime { get; private set; }
         public DateTime EndTime { get; private set; }
         public bool IsAvailable { get; private set; }
+        public decimal ConsultationFee { get; private set; }
 
         private TimeSlot() { }
 
-        public static TimeSlot Create(DateTime startTime, DateTime endTime)
+        public static TimeSlot Create(DateTime startTime, DateTime endTime, decimal consultationFee = 0)
         {
             if (startTime >= endTime)
                 throw new DomainException("Start time must be before end time");
@@ -96,9 +113,11 @@ namespace DoctorAvailability.Abstractions.Models
 
             return new TimeSlot
             {
+                Id = Guid.NewGuid(),
                 StartTime = startTime,
                 EndTime = endTime,
-                IsAvailable = true
+                IsAvailable = true,
+                ConsultationFee = consultationFee
             };
         }
 
@@ -112,9 +131,47 @@ namespace DoctorAvailability.Abstractions.Models
             IsAvailable = true;
         }
 
-        public bool Overlaps(TimeSlot other)
+        public bool OverlapsWith(TimeSlot other)
         {
             return StartTime < other.EndTime && EndTime > other.StartTime;
         }
     }
-} 
+    
+    public record AvailabilitySlotAddedEvent : Shared.RootEntity.IDomainEvent
+    {
+        public AvailabilitySlotAddedEvent(Doctor doctor, TimeSlot slot)
+        {
+            DoctorId = doctor.Id;
+            DoctorName = doctor.Name;
+            SlotId = slot.Id;
+            StartTime = slot.StartTime;
+            EndTime = slot.EndTime;
+            ConsultationFee = slot.ConsultationFee;
+        }
+
+        public DoctorId DoctorId { get; }
+        public DoctorName DoctorName { get; }
+        public Guid SlotId { get; }
+        public DateTime StartTime { get; }
+        public DateTime EndTime { get; }
+        public decimal ConsultationFee { get; }
+    }
+
+    public record AvailabilitySlotRemovedEvent : Shared.RootEntity.IDomainEvent
+    {
+        public AvailabilitySlotRemovedEvent(Doctor doctor, TimeSlot slot)
+        {
+            DoctorId = doctor.Id;
+            DoctorName = doctor.Name;
+            SlotId = slot.Id;
+            StartTime = slot.StartTime;
+            EndTime = slot.EndTime;
+        }
+
+        public DoctorId DoctorId { get; }
+        public DoctorName DoctorName { get; }
+        public Guid SlotId { get; }
+        public DateTime StartTime { get; }
+        public DateTime EndTime { get; }
+    }
+}
